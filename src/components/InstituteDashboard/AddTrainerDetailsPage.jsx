@@ -544,42 +544,9 @@ export default function AddTrainerDetailsPage() {
     }
 
     if (step === 2) {
-      if (!formData.bankName.trim()) {
-        newErrors.bankName = "Bank name is required";
-      } else if (!/^[A-Za-z\s]+$/.test(formData.bankName)) {
-        newErrors.bankName = "Bank name must contain only letters";
-      }
-
-      if (!formData.accountName.trim()) {
-        newErrors.accountName = "Account name is required";
-      } else if (!/^[A-Za-z\s]+$/.test(formData.accountName)) {
-        newErrors.accountName = "Account name must contain only letters";
-      }
-
-      if (!formData.accountNumber.trim()) {
-        newErrors.accountNumber = "Account number is required";
-      } else if (!/^[0-9]+$/.test(formData.accountNumber)) {
-        newErrors.accountNumber = "Account number must contain only numbers";
-      } else if (formData.accountNumber.length < 9 || formData.accountNumber.length > 18) {
-        newErrors.accountNumber = "Account number must be 9-18 digits";
-      }
-
-      if (!formData.ifscCode.trim()) {
-        newErrors.ifscCode = "IFSC code is required";
-      } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(formData.ifscCode)) {
-        newErrors.ifscCode = "Invalid IFSC format (Example: SBIN0001234)";
-      }
-
-      if (formData.pfDetails && !/^[A-Za-z0-9]+$/.test(formData.pfDetails)) {
-        newErrors.pfDetails = "PF details must be alphanumeric only";
-      }
-
-      if (formData.upiDetails && !/^[\w.-]+@[\w]+$/.test(formData.upiDetails)) {
-        newErrors.upiDetails = "Invalid UPI ID (Example: name@upi)";
-      }
-      setErrors(newErrors);
-      return Object.keys(newErrors).length === 0;
+        return true;
     }
+      
 
   };
 
@@ -628,6 +595,7 @@ export default function AddTrainerDetailsPage() {
     setStep(1);
   };
   const handleSubmit = async () => {
+    console.log("Submitting form", formData);
     if (!validateStep()) return;
 
     if (!profilePreview) {
@@ -679,9 +647,12 @@ export default function AddTrainerDetailsPage() {
       alert("Trainer created successfully");
       resetForm();
 
-    } catch (err) {
+    }
+     catch (err) {
+       console.error("SAVE ERROR:", err);
       alert(err.message);
-    } finally {
+    } 
+    finally {
       setSaving(false); // 🔥 STOP LOADING (IMPORTANT)
     }
   };
@@ -1071,129 +1042,14 @@ export default function AddTrainerDetailsPage() {
 
         {step === 2 && (
           <div className="mt-6">
-            <p className="text-center text-red-500 font-medium mb-8">
-              You can add your Bank Details
-            </p>
+          
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-
-              {/* Bank Name */}
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  Bank Name<span className="text-red-500">*</span>
-                </label>
-                <input
-                  className={inputClass}
-                  value={formData.bankName}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^A-Za-z\s]/g, "");
-                    setFormData({ ...formData, bankName: value });
-                  }}
-                />
-                {errors.bankName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.bankName}</p>
-                )}
-              </div>
-
-              {/* Account Name */}
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  Account Name<span className="text-red-500">*</span>
-                </label>
-                <input
-                  className={inputClass}
-                  value={formData.accountName || ""}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^A-Za-z\s]/g, "");
-                    setFormData({ ...formData, accountName: value });
-                  }}
-                />
-                {errors.accountName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.accountName}</p>
-                )}
-              </div>
-
-              {/* Account Number */}
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  Account Number<span className="text-red-500">*</span>
-                </label>
-                <input
-                  className={inputClass}
-                  value={formData.accountNumber}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "");
-                    if (value.length <= 18) {
-                      setFormData({ ...formData, accountNumber: value });
-                    }
-                  }}
-                />
-                {errors.accountNumber && (
-                  <p className="text-red-500 text-xs mt-1">{errors.accountNumber}</p>
-                )}
-              </div>
-
-              {/* IFSC */}
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  IFSC Code<span className="text-red-500">*</span>
-                </label>
-                <input
-                  className={inputClass}
-                  value={formData.ifscCode}
-                  onChange={(e) => {
-                    const value = e.target.value
-                      .toUpperCase()
-                      .replace(/[^A-Z0-9]/g, "");
-
-                    if (value.length <= 11) {
-                      setFormData({ ...formData, ifscCode: value });
-                    }
-                  }}
-                />
-                {errors.ifscCode && (
-                  <p className="text-red-500 text-xs mt-1">{errors.ifscCode}</p>
-                )}
-              </div>
-
-              {/* PF */}
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  PF Details (Provident Fund)
-                  <span className="text-red-500">*</span>
-                </label>
-                <input
-                  className={inputClass}
-                  value={formData.pfDetails || ""}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^A-Za-z0-9]/g, "");
-                    setFormData({ ...formData, pfDetails: value });
-                  }}
-                />
-                {errors.pfDetails && (
-                  <p className="text-red-500 text-xs mt-1">{errors.pfDetails}</p>
-                )}
-              </div>
-
-              {/* UPI */}
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  UPI Details (Optional)
-                </label>
-                <input
-                  className={inputClass}
-                  value={formData.upiDetails || ""}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^A-Za-z0-9@._-]/g, "");
-                    setFormData({ ...formData, upiDetails: value });
-                  }}
-                />
-              </div>
+           
 
               {/* AADHAR */}
               {/* Aadhaar Upload */}
               <div className="col-span-2 flex flex-col">
-                <label className="text-sm font-semibold mb-2">
+                <label className="text-sm font-semibold mb-4">
                   Aadhaar Front & Back Photos (Optional)
                 </label>
 
@@ -1236,10 +1092,10 @@ export default function AddTrainerDetailsPage() {
                   You can upload 1 or 2 images (maximum 2)
                 </p>
               </div>
-            </div>
+            
 
             {/* ACTION BUTTONS */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mt-12">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mt-48">
 
               <button
                 type="button"
@@ -1250,15 +1106,9 @@ export default function AddTrainerDetailsPage() {
               </button>
 
               <div className="flex gap-6">
+                
                 <button
                   type="button"
-                  onClick={resetForm}
-                  className="text-orange-500 font-semibold"
-                >
-                  Add More
-                </button>
-
-                <button
                   onClick={handleSubmit}
                   disabled={saving}
                   className={`px-10 py-3 rounded-md font-semibold text-white transition

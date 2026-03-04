@@ -327,7 +327,11 @@ export default function AddTrainerDetailsPage() {
     "Black",
     "Green",
   ];
-
+  const skillLevels = [
+    "Beginner",
+    "Intermediate",
+    "Advance"
+  ];
   const [availableSubCategories, setAvailableSubCategories] = useState([]);
   const handleCategoryChange = (e) => {
     const selectedCategory = e.target.value;
@@ -357,6 +361,7 @@ export default function AddTrainerDetailsPage() {
     age: "",
     joiningDate: "",
     belt: "",
+    skillLevel: "",
     category: "",
     subCategory: "",
     sessions: "",
@@ -414,7 +419,11 @@ export default function AddTrainerDetailsPage() {
       if (!formData.joiningDate)
         newErrors.joiningDate = "Joining date is required";
 
-      if (!formData.belt) newErrors.belt = "Belt is required";
+      if (formData.category === "Martial Arts" && !formData.belt)
+        newErrors.belt = "Belt is required";
+
+      if (formData.category !== "Martial Arts" && !formData.skillLevel)
+        newErrors.skillLevel = "Skill level is required";
 
       if (!formData.category) newErrors.category = "Category is required";
 
@@ -583,66 +592,66 @@ export default function AddTrainerDetailsPage() {
     return urls;
   };
 
-const handleSubmit = async () => {
-  if (!validateStep()) {
-    alert("Please fill all required fields");
-    return;
-  }
-
-  if (!profilePreview) {
-    alert("Please upload profile image");
-    return;
-  }
-
-  try {
-    setIsSaving(true); // ✅ START LOADING
-
-    const cred = await createUserWithEmailAndPassword(
-      secondaryAuth,
-      formData.email,
-      DEFAULT_PASSWORD
-    );
-
-    const studentUid = cred.user.uid;
-
-    const { aadharFiles, ...rest } = formData;
-
-    const profileFile = profileInputRef.current?.files?.[0];
-    let profileImageUrl = "";
-
-    if (profileFile) {
-      profileImageUrl = await uploadImageToCloudinary(profileFile);
+  const handleSubmit = async () => {
+    if (!validateStep()) {
+      alert("Please fill all required fields");
+      return;
     }
 
-    let aadharUrls = [];
-    if (aadharFiles?.length) {
-      aadharUrls = await uploadMultipleToCloudinary(aadharFiles);
+    if (!profilePreview) {
+      alert("Please upload profile image");
+      return;
     }
 
-    await setDoc(doc(db, "trainerstudents", studentUid), {
-      ...rest,
-      aadharFilesCount: aadharFiles.length,
-      profileImageUrl,
-      aadharUrls,
-      studentUid,
-      trainerId: user.uid,
-      role: "student",
-      createdAt: serverTimestamp(),
-    });
+    try {
+      setIsSaving(true); // ✅ START LOADING
 
-    await updateDoc(doc(db, "trainers", user.uid), {
-      students: arrayUnion(studentUid),
-    });
+      const cred = await createUserWithEmailAndPassword(
+        secondaryAuth,
+        formData.email,
+        DEFAULT_PASSWORD
+      );
 
-    alert("Student created successfully");
-    resetForm();
+      const studentUid = cred.user.uid;
 
-  } catch (err) {
-    alert(err.message);
-  } finally {
-    setIsSaving(false); // ✅ STOP LOADING ALWAYS
-  }
-};
+      const { aadharFiles, ...rest } = formData;
+
+      const profileFile = profileInputRef.current?.files?.[0];
+      let profileImageUrl = "";
+
+      if (profileFile) {
+        profileImageUrl = await uploadImageToCloudinary(profileFile);
+      }
+
+      let aadharUrls = [];
+      if (aadharFiles?.length) {
+        aadharUrls = await uploadMultipleToCloudinary(aadharFiles);
+      }
+
+      await setDoc(doc(db, "trainerstudents", studentUid), {
+        ...rest,
+        aadharFilesCount: aadharFiles.length,
+        profileImageUrl,
+        aadharUrls,
+        studentUid,
+        trainerId: user.uid,
+        role: "student",
+        createdAt: serverTimestamp(),
+      });
+
+      await updateDoc(doc(db, "trainers", user.uid), {
+        students: arrayUnion(studentUid),
+      });
+
+      alert("Student created successfully");
+      resetForm();
+
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsSaving(false); // ✅ STOP LOADING ALWAYS
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -716,9 +725,8 @@ const handleSubmit = async () => {
               {[1, 2].map((s) => (
                 <div
                   key={s}
-                  className={`h-3 flex-1 rounded-full ${
-                    step >= s ? "bg-orange-500" : "bg-gray-300"
-                  }`}
+                  className={`h-3 flex-1 rounded-full ${step >= s ? "bg-orange-500" : "bg-gray-300"
+                    }`}
                 />
               ))}
             </div>
@@ -838,24 +846,6 @@ const handleSubmit = async () => {
               )}
             </div>
 
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">Belt*</label>
-              <select
-                className={inputClass}
-                value={formData.belt}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, belt: e.target.value }))
-                }
-              >
-                <option value="">Select Belt</option>
-                {belts.map((b) => (
-                  <option key={b}>{b}</option>
-                ))}
-              </select>
-              {errors.belt && (
-                <span className="text-red-500 text-xs mt-1">{errors.belt}</span>
-              )}
-            </div>
 
             {/* Row 4 */}
             <div className="flex flex-col">
@@ -874,9 +864,8 @@ const handleSubmit = async () => {
 
                   <ChevronDown
                     size={16}
-                    className={`transition-transform ${
-                      showCategoryDropdown ? "rotate-180" : ""
-                    }`}
+                    className={`transition-transform ${showCategoryDropdown ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
@@ -926,9 +915,8 @@ const handleSubmit = async () => {
                     formData.category &&
                     setShowSubCategoryDropdown(!showSubCategoryDropdown)
                   }
-                  className={`${inputClass} w-full flex items-center justify-between ${
-                    !formData.category && "bg-gray-100 cursor-not-allowed"
-                  }`}
+                  className={`${inputClass} w-full flex items-center justify-between ${!formData.category && "bg-gray-100 cursor-not-allowed"
+                    }`}
                 >
                   <span>
                     {formData.subCategory
@@ -940,9 +928,8 @@ const handleSubmit = async () => {
 
                   <ChevronDown
                     size={16}
-                    className={`transition-transform ${
-                      showSubCategoryDropdown ? "rotate-180" : ""
-                    }`}
+                    className={`transition-transform ${showSubCategoryDropdown ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
@@ -970,6 +957,42 @@ const handleSubmit = async () => {
                 <span className="text-red-500 text-xs mt-1">
                   {errors.subCategory}
                 </span>
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-2">
+                {formData.category === "Martial Arts" ? "Belt*" : "Skill Level*"}
+              </label>
+
+              <select
+                className={inputClass}
+                value={
+                  formData.category === "Martial Arts"
+                    ? formData.belt
+                    : formData.skillLevel
+                }
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    [formData.category === "Martial Arts" ? "belt" : "skillLevel"]:
+                      e.target.value,
+                  }))
+                }
+              >
+                <option value="" disabled hidden>
+                  {formData.category === "Martial Arts"
+                    ? "Select Belt"
+                    : "Select Skill Level"}
+                </option>
+
+                {formData.category === "Martial Arts"
+                  ? belts.map((b) => <option key={b}>{b}</option>)
+                  : skillLevels.map((s) => <option key={s}>{s}</option>)}
+              </select>
+
+              {errors.belt && formData.category === "Martial Arts" && (
+                <span className="text-red-500 text-xs mt-1">{errors.belt}</span>
               )}
             </div>
 
@@ -1010,15 +1033,14 @@ const handleSubmit = async () => {
                   <span>
                     {formData.timings
                       ? timeSlots.find((t) => t.value === formData.timings)
-                          ?.label
+                        ?.label
                       : "Select Time"}
                   </span>
 
                   <ChevronDown
                     size={16}
-                    className={`transition-transform ${
-                      showTimeDropdown ? "rotate-180" : ""
-                    }`}
+                    className={`transition-transform ${showTimeDropdown ? "rotate-180" : ""
+                      }`}
                   />
                 </button>
 
@@ -1093,166 +1115,162 @@ const handleSubmit = async () => {
           </div>
         )}
 
-{step === 2 && (
-  <div className="mt-6 grid grid-cols-2 gap-x-10 gap-y-6">
+        {step === 2 && (
+          <div className="mt-6 grid grid-cols-2 gap-x-10 gap-y-6">
 
-    {/* Monthly Fee */}
-    <div className="flex flex-col">
-      <label className="text-sm font-semibold mb-2">
-        Monthly Fee (₹)*
-      </label>
-      <input
-        type="number"
-        min="0"
-        className={inputClass}
-        value={formData.monthlyFee}
-        onChange={(e) =>
-          setFormData((prev) => ({
-            ...prev,
-            monthlyFee: e.target.value,
-          }))
-        }
-      />
-      {errors.monthlyFee && (
-        <span className="text-red-500 text-xs mt-1">
-          {errors.monthlyFee}
-        </span>
-      )}
-    </div>
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  Monthly Payment Date*
-                </label>
-                <input
-                  type="date"
-                  className={inputClass}
-                  min={new Date().toISOString().split("T")[0]}
-                  max="9999-12-31"
-                  value={formData.monthlyDate}
-                  onChange={(e) => {
-                    const value = e.target.value;
+            {/* Monthly Fee */}
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-2">
+                Monthly Fee (₹)*
+              </label>
+              <input
+                type="number"
+                min="0"
+                className={inputClass}
+                value={formData.monthlyFee}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    monthlyFee: e.target.value,
+                  }))
+                }
+              />
+              {errors.monthlyFee && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.monthlyFee}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-2">
+                Monthly Payment Date*
+              </label>
+              <input
+                type="date"
+                className={inputClass}
+                min={new Date().toISOString().split("T")[0]}
+                max="9999-12-31"
+                value={formData.monthlyDate}
+                onChange={(e) => {
+                  const value = e.target.value;
 
-                    // Extra safety: ensure valid 4-digit year format
-                    const year = value.split("-")[0];
+                  // Extra safety: ensure valid 4-digit year format
+                  const year = value.split("-")[0];
 
-                    if (year.length <= 4) {
-                      setFormData((prev) => ({
-                        ...prev,
-                        monthlyDate: value,
-                      }));
-                    }
-                  }}
-                />
-                {errors.monthlyDate && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.monthlyDate}
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  Aadhaar Front & Back Photos (Optional)
-                </label>
-
-                <div className="relative w-full">
-                  <input
-                    readOnly
-                    value={
-                      formData.aadharFiles.length
-                        ? `${formData.aadharFiles.length}/2 image(s) selected`
-                        : ""
-                    }
-                    placeholder="Upload Aadhaar images"
-                    className={`${inputClass} w-full pr-12`}
-                  />
-
-<button
-  type="button"
-  onClick={() => aadharInputRef.current.click()}
-  className="absolute right-3 top-1/2 -translate-y-1/2
-    flex items-center justify-center"
->
-  <img
-    src="/upload.png"
-    alt="upload"
-    className="w-6 h-6"
-  />
-</button>
-
-                  <input
-                    type="file"
-                    ref={aadharInputRef}
-                    multiple
-                    accept="image/*"
-                    onChange={handleAadharUpload}
-                    className="hidden"
-                  />
-                </div>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  You can upload 1 or 2 images (maximum 2)
-                </p>
-              </div>
-
-              <div className="col-span-2 flex flex-col">
-                <label className="text-sm font-semibold mb-2">
-                  Enter Address*
-                </label>
-                <textarea
-                  rows={4}
-                  className={`${inputClass} h-auto`}
-                  value={formData.address}
-                  onChange={(e) =>
+                  if (year.length <= 4) {
                     setFormData((prev) => ({
                       ...prev,
-                      address: e.target.value,
-                    }))
+                      monthlyDate: value,
+                    }));
                   }
+                }}
+              />
+              {errors.monthlyDate && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.monthlyDate}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-2">
+                Aadhaar Front & Back Photos (Optional)
+              </label>
+
+              <div className="relative w-full">
+                <input
+                  readOnly
+                  value={
+                    formData.aadharFiles.length
+                      ? `${formData.aadharFiles.length}/2 image(s) selected`
+                      : ""
+                  }
+                  placeholder="Upload Aadhaar images"
+                  className={`${inputClass} w-full pr-12`}
                 />
-                {errors.address && (
-                  <span className="text-red-500 text-xs mt-1">
-                    {errors.address}
-                  </span>
-                )}
+
+                <button
+                  type="button"
+                  onClick={() => aadharInputRef.current.click()}
+                  className="absolute right-3 top-1/2 -translate-y-1/2
+    flex items-center justify-center"
+                >
+                  <img
+                    src="/upload.png"
+                    alt="upload"
+                    className="w-6 h-6"
+                  />
+                </button>
+
+                <input
+                  type="file"
+                  ref={aadharInputRef}
+                  multiple
+                  accept="image/*"
+                  onChange={handleAadharUpload}
+                  className="hidden"
+                />
               </div>
-           
 
- {/* ACTION BUTTONS */}
-<div className="col-span-2 mt-16 w-full flex items-center">
+              <p className="text-xs text-gray-500 mt-1">
+                You can upload 1 or 2 images (maximum 2)
+              </p>
+            </div>
 
-  {/* LEFT SIDE */}
-  <button
-    type="button"
-    onClick={handleBack}
-    className="text-orange-500 font-medium"
-  >
-    Back
-  </button>
+            <div className="col-span-2 flex flex-col">
+              <label className="text-sm font-semibold mb-2">
+                Enter Address*
+              </label>
+              <textarea
+                rows={4}
+                className={`${inputClass} h-auto`}
+                value={formData.address}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    address: e.target.value,
+                  }))
+                }
+              />
+              {errors.address && (
+                <span className="text-red-500 text-xs mt-1">
+                  {errors.address}
+                </span>
+              )}
+            </div>
 
-  {/* PUSH RIGHT SIDE TO CORNER */}
-  <div className="ml-auto flex items-center gap-8">
-    <button
-      type="button"
-      onClick={resetForm}
-      className="text-orange-500 font-semibold"
-    >
-      Add More
-    </button>
+            <p className="col-span-2 text-red-500 text-sm mt-2">
+              <span className="font-semibold">NOTE :</span> Customers will receive a reminder notification five days prior to the payment due date.
+            </p>
+            {/* ACTION BUTTONS */}
+            <div className="col-span-2 mt-16 w-full flex items-center">
 
-<button
-  onClick={handleSubmit}
-  disabled={isSaving}
-  className={`px-10 py-3 rounded-lg font-semibold text-white transition
-    ${isSaving 
-      ? "bg-orange-300 cursor-not-allowed" 
-      : "bg-orange-500 hover:bg-orange-600"}
+              {/* LEFT SIDE */}
+              <button
+                type="button"
+                onClick={handleBack}
+                className="text-orange-500 font-medium"
+              >
+                Back
+              </button>
+
+              {/* PUSH RIGHT SIDE TO CORNER */}
+              <div className="ml-auto flex items-center gap-8">
+
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSaving}
+                  className={`px-10 py-3 rounded-lg font-semibold text-white transition
+    ${isSaving
+                      ? "bg-orange-300 cursor-not-allowed"
+                      : "bg-orange-500 hover:bg-orange-600"}
   `}
->
-  {isSaving ? "Saving..." : "Save"}
-</button>
-  </div>
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </button>
+              </div>
 
-</div>
+            </div>
           </div>
         )}
 

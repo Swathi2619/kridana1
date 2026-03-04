@@ -350,6 +350,7 @@ export default function AddTrainerDetailsPage() {
     category: "",
     subCategory: "",
     sessions: "",
+    skillLevel: "",
     timings: "",
     phone: "",
     email: "",
@@ -428,7 +429,15 @@ export default function AddTrainerDetailsPage() {
       if (!formData.joiningDate)
         newErrors.joiningDate = "Joining date is required";
 
-      if (!formData.belt) newErrors.belt = "Belt is required";
+      if (formData.category === "Martial Arts" && !formData.belt)
+  newErrors.belt = "Belt is required";
+
+if (
+  formData.category &&
+  formData.category !== "Martial Arts" &&
+  !formData.skillLevel
+)
+  newErrors.skillLevel = "Skill Level is required";
 
       if (!formData.category) newErrors.category = "Category is required";
 
@@ -847,24 +856,6 @@ export default function AddTrainerDetailsPage() {
               )}
             </div>
 
-            <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">Belt*</label>
-              <select
-                className={inputClass}
-                value={formData.belt}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, belt: e.target.value }))
-                }
-              >
-                <option value="">Select Belt</option>
-                {belts.map((b) => (
-                  <option key={b}>{b}</option>
-                ))}
-              </select>
-              {errors.belt && (
-                <span className="text-red-500 text-xs mt-1">{errors.belt}</span>
-              )}
-            </div>
 
             {/* Row 4 */}
             <div className="flex flex-col">
@@ -895,11 +886,13 @@ export default function AddTrainerDetailsPage() {
                       <div
                         key={cat}
                         onClick={() => {
-                          setFormData((prev) => ({
-                            ...prev,
-                            category: cat,
-                            subCategory: "",
-                          }));
+                    setFormData((prev) => ({
+  ...prev,
+  category: cat,
+  subCategory: "",
+  belt: "",
+  skillLevel: "",
+}));
 
                           setAvailableSubCategories(
                             subCategoryMap[cat] ? [...subCategoryMap[cat]] : [],
@@ -981,23 +974,67 @@ export default function AddTrainerDetailsPage() {
                 </span>
               )}
             </div>
+            {formData.category === "Martial Arts" && (
+  <div className="flex flex-col">
+    <label className="text-sm font-semibold mb-2">
+      Belt<span className="text-red-500">*</span>
+    </label>
+    <select
+      className={inputClass}
+      value={formData.belt}
+      onChange={(e) =>
+        setFormData((prev) => ({ ...prev, belt: e.target.value }))
+      }
+    >
+      <option value="">Select Belt</option>
+      {belts.map((b) => (
+        <option key={b}>{b}</option>
+      ))}
+    </select>
+    {errors.belt && (
+      <span className="text-red-500 text-xs mt-1">
+        {errors.belt}
+      </span>
+    )}
+  </div>
+)}
+{formData.category && formData.category !== "Martial Arts" && (
+  <div className="flex flex-col">
+    <label className="text-sm font-semibold mb-2">
+      Skill Level<span className="text-red-500">*</span>
+    </label>
+    <select
+      className={inputClass}
+      value={formData.skillLevel}
+      onChange={(e) =>
+        setFormData((prev) => ({ ...prev, skillLevel: e.target.value }))
+      }
+    >
+      <option value="">Select Skill Level</option>
+      <option>Beginner</option>
+      <option>Intermediate</option>
+      <option>Advanced</option>
+    </select>
+  </div>
+)}
 
             {/* Row 5 */}
             <div className="flex flex-col">
               <label className="text-sm font-semibold mb-2">
                 Select Sessions*
               </label>
-              <select
-                className={inputClass}
-                value={formData.sessions}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, sessions: e.target.value }))
-                }
-              >
-                <option value="Morning">Morning</option>
-                <option value="Afternoon">Afternoon</option>
-                <option value="Evening">Evening</option>
-              </select>
+<select
+  className={inputClass}
+  value={formData.sessions}
+  onChange={(e) =>
+    setFormData((prev) => ({ ...prev, sessions: e.target.value }))
+  }
+>
+  <option value="">Select Session</option>
+  <option value="Morning">Morning</option>
+  <option value="Afternoon">Afternoon</option>
+  <option value="Evening">Evening</option>
+</select>
               {errors.sessions && (
                 <span className="text-red-500 text-xs mt-1">
                   {errors.sessions}
@@ -1219,6 +1256,9 @@ export default function AddTrainerDetailsPage() {
                   </span>
                 )}
               </div>
+              <p className="text-xs text-red-500 mt-2">
+  <span className="font-semibold">NOTE :</span> Customers will receive a reminder notification five days prior to the payment due date.
+</p>
             </div>
 
             {/* ACTION BUTTONS */}
@@ -1232,13 +1272,7 @@ export default function AddTrainerDetailsPage() {
               </button>
 
               <div className="flex gap-6">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="text-orange-500 font-semibold"
-                >
-                  Add More
-                </button>
+
 
                 <button
                   onClick={handleSubmit}
